@@ -17,6 +17,7 @@ import atlassianIssuesCreateTools from './tools/atlassian.issues.create.tool.js'
 import atlassianStatusesTools from './tools/atlassian.statuses.tool.js';
 import atlassianCommentsTools from './tools/atlassian.comments.tool.js';
 import atlassianWorklogsTools from './tools/atlassian.worklogs.tool.js';
+import atlassianTransitionsTools from './tools/atlassian.transitions.tool.js';
 
 // Create a contextualized logger for this file
 const indexLogger = Logger.forContext('index.ts');
@@ -85,6 +86,9 @@ export async function startServer(
 
 	atlassianWorklogsTools.registerTools(serverInstance);
 	serverLogger.debug('Registered Worklogs tools');
+
+	atlassianTransitionsTools.registerTools(serverInstance);
+	serverLogger.debug('Registered Transitions tools');
 
 	serverLogger.info('All tools registered successfully');
 

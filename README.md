@@ -6,12 +6,13 @@ Transform how you manage and track your work by connecting Claude, Cursor AI, an
 
 ## What You Can Do
 
-✅ **Ask AI about your projects**: *"What are the active issues in the DEV project?"*  
-✅ **Get issue insights**: *"Show me details about PROJ-123 including comments"*  
-✅ **Track project progress**: *"List all high priority issues assigned to me"*  
-✅ **Manage issue comments**: *"Add a comment to PROJ-456 about the test results"*  
-✅ **Search across projects**: *"Find all bugs in progress across my projects"*  
-✅ **Check workflow status**: *"What are the available statuses for the DEV project?"*  
+✅ **Ask AI about your projects**: *"What are the active issues in the DEV project?"*
+✅ **Get issue insights**: *"Show me details about PROJ-123 including comments"*
+✅ **Track project progress**: *"List all high priority issues assigned to me"*
+✅ **Manage issue comments**: *"Add a comment to PROJ-456 about the test results"*
+✅ **Search across projects**: *"Find all bugs in progress across my projects"*
+✅ **Check workflow status**: *"What are the available statuses for the DEV project?"*
+✅ **Transition issues**: *"Move PROJ-789 to Done"* or *"Change the bug status to In Progress"*  
 
 ## Perfect For
 
@@ -144,6 +145,14 @@ Ask your AI assistant:
 - *"Show me all possible workflow states"*
 - *"What status options are available for project MOBILE?"*
 - *"List the workflow states for issue transitions"*
+
+### ⚡ Issue Transitions
+
+Ask your AI assistant:
+- *"What transitions are available for issue PROJ-123?"*
+- *"Move PROJ-456 to Done"*
+- *"Transition PROJ-789 to In Progress and add a comment that work has started"*
+- *"Change the status of the bug to Closed"*
 
 ## Troubleshooting
 

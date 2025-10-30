@@ -684,29 +684,6 @@ export interface CreateIssueParams extends CreateIssueData {
 /**
  * Response from creating an issue
  */
-/**
- * Custom field option schema
- */
-const CustomFieldOptionSchema = z.object({
-	self: z.string(),
-	value: z.string(),
-	id: z.string(),
-	disabled: z.boolean().optional(),
-});
-export type CustomFieldOption = z.infer<typeof CustomFieldOptionSchema>;
-
-/**
- * Custom field options response schema
- */
-const CustomFieldOptionsResponseSchema = z.object({
-	maxResults: z.number(),
-	startAt: z.number(),
-	total: z.number(),
-	isLast: z.boolean(),
-	values: z.array(CustomFieldOptionSchema),
-});
-export type CustomFieldOptionsResponse = z.infer<typeof CustomFieldOptionsResponseSchema>;
-
 const CreateIssueResponseSchema = z.object({
 	id: z.string(),
 	key: z.string(),

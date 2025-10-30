@@ -18,7 +18,6 @@ import atlassianStatusesTools from './tools/atlassian.statuses.tool.js';
 import atlassianCommentsTools from './tools/atlassian.comments.tool.js';
 import atlassianWorklogsTools from './tools/atlassian.worklogs.tool.js';
 import atlassianTransitionsTools from './tools/atlassian.transitions.tool.js';
-import { registerCustomFieldTools } from './tools/atlassian.customfields.tool.js';
 
 // Create a contextualized logger for this file
 const indexLogger = Logger.forContext('index.ts');
@@ -90,9 +89,6 @@ export async function startServer(
 
 	atlassianTransitionsTools.registerTools(serverInstance);
 	serverLogger.debug('Registered Transitions tools');
-
-	registerCustomFieldTools(serverInstance);
-	serverLogger.debug('Registered Custom Fields tools');
 
 	serverLogger.info('All tools registered successfully');
 

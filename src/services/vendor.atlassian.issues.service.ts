@@ -25,7 +25,6 @@ import {
 	CreateIssueParams,
 	CreateIssueResponse,
 	CreateIssueResponseSchema,
-	CustomFieldOptionsResponse,
 } from './vendor.atlassian.issues.types.js';
 import {
 	createAuthMissingError,
@@ -1008,61 +1007,6 @@ async function createIssue(
 	}
 }
 
-/**
- * Get options for a custom field
- *
- * @param fieldId - Custom field ID (numeric part, e.g., "10275" for customfield_10275)
- * @param startAt - Starting index for pagination
- * @param maxResults - Maximum results to return
- * @returns Promise containing custom field options
- */
-async function getCustomFieldOptions(
-	fieldId: string,
-	startAt = 0,
-	maxResults = 100,
-): Promise<CustomFieldOptionsResponse> {
-	const methodLogger = Logger.forContext(
-		'services/vendor.atlassian.issues.service.ts',
-		'getCustomFieldOptions',
-	);
-	methodLogger.debug(
-		`Getting options for custom field ${fieldId}`,
-	);
-
-	const credentials = getAtlassianCredentials();
-	if (!credentials) {
-		throw createAuthMissingError(
-			`Atlassian credentials required to get custom field options`,
-		);
-	}
-
-	try {
-		const queryParams = new URLSearchParams();
-		queryParams.set('startAt', startAt.toString());
-		queryParams.set('maxResults', maxResults.toString());
-
-		const path = `${API_PATH}/customField/${fieldId}/option?${queryParams.toString()}`;
-
-		methodLogger.debug(`Calling Jira API: ${path}`);
-
-		const rawData = await fetchAtlassian(credentials, path);
-
-		// Validate response
-		return rawData as CustomFieldOptionsResponse;
-	} catch (error) {
-		if (error instanceof McpError) {
-			throw error;
-		}
-
-		methodLogger.error('Unexpected error getting custom field options:', error);
-		throw createApiError(
-			`Unexpected error getting options for custom field ${fieldId}: ${error instanceof Error ? error.message : String(error)}`,
-			500,
-			error,
-		);
-	}
-}
-
 export default {
 	search,
 	get,
@@ -1074,5 +1018,4 @@ export default {
 	deleteWorklog,
 	getCreateMeta,
 	createIssue,
-	getCustomFieldOptions,
 };

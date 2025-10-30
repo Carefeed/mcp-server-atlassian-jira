@@ -140,10 +140,15 @@ function formatFieldList(
 				.map((val: unknown) => {
 					if (
 						typeof val === 'object' &&
-						val !== null &&
-						'name' in val
+						val !== null
 					) {
-						return String((val as { name: unknown }).name);
+						// Check for 'value' property first (custom fields like multicheckboxes, select)
+						// Then check for 'name' property (standard fields)
+						if ('value' in val) {
+							return String((val as { value: unknown }).value);
+						} else if ('name' in val) {
+							return String((val as { name: unknown }).name);
+						}
 					}
 					return String(val);
 				});

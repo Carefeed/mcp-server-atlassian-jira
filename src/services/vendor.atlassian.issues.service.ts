@@ -25,6 +25,7 @@ import {
 	CreateIssueParams,
 	CreateIssueResponse,
 	CreateIssueResponseSchema,
+	CustomFieldOptionsResponse,
 } from './vendor.atlassian.issues.types.js';
 import {
 	createAuthMissingError,
@@ -891,6 +892,34 @@ async function getCreateMeta(
 		methodLogger.debug(`Calling Jira API: ${path}`);
 
 		const rawData = await fetchAtlassian(credentials, path);
+
+		// Debug logging for custom field options
+		methodLogger.info('=== CUSTOM FIELD DEBUG START ===');
+		if (rawData && typeof rawData === 'object') {
+			const data = rawData as any;
+			methodLogger.info(`Has data.fields: ${!!data.fields}`);
+			methodLogger.info(`Has data.projects: ${!!data.projects}`);
+
+			// Check both response formats
+			const fields = data.fields || data.projects?.[0]?.issuetypes?.[0]?.fields;
+			methodLogger.info(`Fields found: ${!!fields}`);
+
+			if (fields) {
+				methodLogger.info(`Has customfield_10275: ${!!fields.customfield_10275}`);
+				methodLogger.info(`Has customfield_10135: ${!!fields.customfield_10135}`);
+
+				// Log Environment field (customfield_10275)
+				if (fields.customfield_10275?.allowedValues) {
+					methodLogger.info('Environment (customfield_10275) allowedValues:', JSON.stringify(fields.customfield_10275.allowedValues, null, 2));
+				}
+				// Log Carefeed Component field (customfield_10135)
+				if (fields.customfield_10135?.allowedValues) {
+					methodLogger.info('Carefeed Component (customfield_10135) allowedValues:', JSON.stringify(fields.customfield_10135.allowedValues, null, 2));
+				}
+			}
+		}
+		methodLogger.info('=== CUSTOM FIELD DEBUG END ===');
+
 		return validateResponse(
 			rawData,
 			CreateMetaResponseSchema,
@@ -979,6 +1008,61 @@ async function createIssue(
 	}
 }
 
+/**
+ * Get options for a custom field
+ *
+ * @param fieldId - Custom field ID (numeric part, e.g., "10275" for customfield_10275)
+ * @param startAt - Starting index for pagination
+ * @param maxResults - Maximum results to return
+ * @returns Promise containing custom field options
+ */
+async function getCustomFieldOptions(
+	fieldId: string,
+	startAt = 0,
+	maxResults = 100,
+): Promise<CustomFieldOptionsResponse> {
+	const methodLogger = Logger.forContext(
+		'services/vendor.atlassian.issues.service.ts',
+		'getCustomFieldOptions',
+	);
+	methodLogger.debug(
+		`Getting options for custom field ${fieldId}`,
+	);
+
+	const credentials = getAtlassianCredentials();
+	if (!credentials) {
+		throw createAuthMissingError(
+			`Atlassian credentials required to get custom field options`,
+		);
+	}
+
+	try {
+		const queryParams = new URLSearchParams();
+		queryParams.set('startAt', startAt.toString());
+		queryParams.set('maxResults', maxResults.toString());
+
+		const path = `${API_PATH}/customField/${fieldId}/option?${queryParams.toString()}`;
+
+		methodLogger.debug(`Calling Jira API: ${path}`);
+
+		const rawData = await fetchAtlassian(credentials, path);
+
+		// Validate response
+		return rawData as CustomFieldOptionsResponse;
+	} catch (error) {
+		if (error instanceof McpError) {
+			throw error;
+		}
+
+		methodLogger.error('Unexpected error getting custom field options:', error);
+		throw createApiError(
+			`Unexpected error getting options for custom field ${fieldId}: ${error instanceof Error ? error.message : String(error)}`,
+			500,
+			error,
+		);
+	}
+}
+
 export default {
 	search,
 	get,
@@ -990,4 +1074,5 @@ export default {
 	deleteWorklog,
 	getCreateMeta,
 	createIssue,
+	getCustomFieldOptions,
 };

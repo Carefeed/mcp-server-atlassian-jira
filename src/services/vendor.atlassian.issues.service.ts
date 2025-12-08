@@ -25,6 +25,7 @@ import {
 	CreateIssueParams,
 	CreateIssueResponse,
 	CreateIssueResponseSchema,
+	UpdateIssueParams,
 } from './vendor.atlassian.issues.types.js';
 import {
 	createAuthMissingError,
@@ -1007,6 +1008,121 @@ async function createIssue(
 	}
 }
 
+/**
+ * Update an existing Jira issue
+ *
+ * Updates an issue with new field values. The update can include
+ * changing fields, adding/removing from array fields via the update
+ * object, and modifying issue properties.
+ *
+ * @async
+ * @memberof VendorAtlassianIssuesService
+ * @param {string} issueIdOrKey - The ID or key of the issue to update
+ * @param {UpdateIssueParams} params - Issue update parameters with fields data
+ * @param {Record<string, unknown>} [params.fields] - Fields to set directly
+ * @param {Record<string, unknown[]>} [params.update] - Update operations for fields
+ * @param {boolean} [params.notifyUsers] - Whether to notify users about the update
+ * @param {boolean} [params.returnIssue] - Whether to return the updated issue in the response
+ * @param {string} [params.expand] - Fields to expand in the returned issue
+ * @returns {Promise<Issue | void>} Promise containing the updated issue (if returnIssue=true) or void
+ * @throws {Error} If Atlassian credentials are missing or API request fails
+ * @example
+ * // Update issue summary and description
+ * await updateIssue('ABC-123', {
+ *   fields: {
+ *     summary: 'Updated summary',
+ *     description: { ... } // ADF format
+ *   }
+ * });
+ */
+async function updateIssue(
+	issueIdOrKey: string,
+	params: UpdateIssueParams,
+): Promise<Issue | void> {
+	const methodLogger = Logger.forContext(
+		'services/vendor.atlassian.issues.service.ts',
+		'updateIssue',
+	);
+	methodLogger.debug(`Updating issue ${issueIdOrKey} with params:`, params);
+
+	const credentials = getAtlassianCredentials();
+	if (!credentials) {
+		throw createAuthMissingError(
+			`Atlassian credentials required to update issue ${issueIdOrKey}`,
+		);
+	}
+
+	try {
+		// Build query parameters
+		const queryParams = new URLSearchParams();
+		if (params.notifyUsers !== undefined) {
+			queryParams.set('notifyUsers', params.notifyUsers.toString());
+		}
+		if (params.overrideScreenSecurity !== undefined) {
+			queryParams.set(
+				'overrideScreenSecurity',
+				params.overrideScreenSecurity.toString(),
+			);
+		}
+		if (params.overrideEditableFlag !== undefined) {
+			queryParams.set(
+				'overrideEditableFlag',
+				params.overrideEditableFlag.toString(),
+			);
+		}
+		if (params.returnIssue !== undefined) {
+			queryParams.set('returnIssue', params.returnIssue.toString());
+		}
+		if (params.expand) {
+			queryParams.set('expand', params.expand);
+		}
+
+		const queryString = queryParams.toString()
+			? `?${queryParams.toString()}`
+			: '';
+		const path = `${API_PATH}/issue/${issueIdOrKey}${queryString}`;
+
+		methodLogger.debug(`Calling Jira API: PUT ${path}`);
+
+		const requestBody = {
+			...(params.fields && { fields: params.fields }),
+			...(params.update && { update: params.update }),
+			...(params.historyMetadata && {
+				historyMetadata: params.historyMetadata,
+			}),
+			...(params.properties && { properties: params.properties }),
+		};
+
+		const rawData = await fetchAtlassian(credentials, path, {
+			method: 'PUT',
+			body: requestBody,
+		});
+
+		// If returnIssue is true, we get the issue back; otherwise, we get empty/204
+		if (params.returnIssue && rawData) {
+			return validateResponse(
+				rawData,
+				IssueSchema,
+				`update issue ${issueIdOrKey}`,
+			);
+		}
+
+		methodLogger.debug(`Successfully updated issue ${issueIdOrKey}`);
+		return;
+	} catch (error) {
+		if (error instanceof McpError) {
+			throw error;
+		}
+
+		methodLogger.error(`Unexpected error updating issue ${issueIdOrKey}:`, error);
+		throw createApiError(
+			`Unexpected error updating Jira issue ${issueIdOrKey}: ${error instanceof Error ? error.message : String(error)}`,
+			500,
+			error,
+		);
+	}
+}
+
 export default {
 	search,
 	get,
@@ -1018,4 +1134,5 @@ export default {
 	deleteWorklog,
 	getCreateMeta,
 	createIssue,
+	updateIssue,
 };
